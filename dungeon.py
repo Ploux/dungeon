@@ -1,0 +1,330 @@
+import pygame
+import random
+import sys
+
+# Initialize pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+TILE_SIZE = 32
+MAP_WIDTH = 25
+MAP_HEIGHT = 18
+PLAYER_COLOR = (0, 255, 0)
+ENEMY_COLOR = (255, 0, 0)
+TREASURE_COLOR = (255, 255, 0)
+WALL_COLOR = (100, 100, 100)
+FLOOR_COLOR = (50, 50, 50)
+TEXT_COLOR = (255, 255, 255)
+BACKGROUND_COLOR = (0, 0, 0)
+
+# Create the screen
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Dungeon Crawler")
+clock = pygame.time.Clock()
+
+class Player:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.health = 100
+        self.max_health = 100
+        self.attack = 10
+        self.defense = 5
+        self.gold = 0
+        self.level = 1
+        self.exp = 0
+        self.exp_to_level = 100
+        
+    def move(self, dx, dy, dungeon):
+        new_x = self.x + dx
+        new_y = self.y + dy
+        
+        # Check if the move is valid
+        if 0 <= new_x < MAP_WIDTH and 0 <= new_y < MAP_HEIGHT:
+            if dungeon[new_y][new_x] != 1:  # 1 represents walls
+                self.x = new_x
+                self.y = new_y
+                return True
+        return False
+        
+    def take_damage(self, damage):
+        actual_damage = max(1, damage - self.defense)
+        self.health -= actual_damage
+        return actual_damage
+        
+    def heal(self, amount):
+        self.health = min(self.max_health, self.health + amount)
+        
+    def gain_exp(self, amount):
+        self.exp += amount
+        if self.exp >= self.exp_to_level:
+            self.level_up()
+            
+    def level_up(self):
+        self.level += 1
+        self.exp -= self.exp_to_level
+        self.exp_to_level = int(self.exp_to_level * 1.5)
+        self.max_health += 20
+        self.health = self.max_health
+        self.attack += 3
+        self.defense += 2
+
+class Enemy:
+    def __init__(self, x, y, enemy_type):
+        self.x = x
+        self.y = y
+        self.type = enemy_type
+        if enemy_type == "goblin":
+            self.health = 30
+            self.attack = 8
+            self.defense = 2
+            self.exp_reward = 25
+            self.color = (200, 50, 50)
+        elif enemy_type == "orc":
+            self.health = 60
+            self.attack = 15
+            self.defense = 5
+            self.exp_reward = 50
+            self.color = (150, 0, 0)
+        elif enemy_type == "dragon":
+            self.health = 120
+            self.attack = 25
+            self.defense = 10
+            self.exp_reward = 100
+            self.color = (100, 0, 100)
+            
+    def take_damage(self, damage):
+        actual_damage = max(1, damage - self.defense)
+        self.health -= actual_damage
+        return actual_damage
+
+class Treasure:
+    def __init__(self, x, y, treasure_type):
+        self.x = x
+        self.y = y
+        self.type = treasure_type
+        if treasure_type == "gold":
+            self.value = random.randint(10, 50)
+            self.color = (255, 255, 0)
+        elif treasure_type == "health":
+            self.value = random.randint(20, 50)
+            self.color = (255, 0, 0)
+        elif treasure_type == "sword":
+            self.value = random.randint(5, 15)
+            self.color = (200, 200, 200)
+
+class Dungeon:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.map = [[0 for _ in range(width)] for _ in range(height)]
+        self.generate_dungeon()
+        self.enemies = []
+        self.treasures = []
+        self.generate_entities()
+        
+    def generate_dungeon(self):
+        # Create a simple grid with walls around the edges
+        for y in range(self.height):
+            for x in range(self.width):
+                if x == 0 or y == 0 or x == self.width - 1 or y == self.height - 1:
+                    self.map[y][x] = 1  # Wall
+                else:
+                    # Randomly generate some inner walls
+                    if random.random() < 0.15:
+                        self.map[y][x] = 1  # Wall
+        
+        # Ensure player start position is clear
+        self.map[1][1] = 0
+        self.map[1][2] = 0
+        self.map[2][1] = 0
+        
+    def generate_entities(self):
+        # Generate enemies
+        for _ in range(15):
+            while True:
+                x = random.randint(1, self.width - 2)
+                y = random.randint(1, self.height - 2)
+                if self.map[y][x] == 0:
+                    enemy_type = random.choice(["goblin", "orc", "dragon"])
+                    self.enemies.append(Enemy(x, y, enemy_type))
+                    break
+                    
+        # Generate treasures
+        for _ in range(10):
+            while True:
+                x = random.randint(1, self.width - 2)
+                y = random.randint(1, self.height - 2)
+                if self.map[y][x] == 0:
+                    treasure_type = random.choice(["gold", "health", "sword"])
+                    self.treasures.append(Treasure(x, y, treasure_type))
+                    break
+
+def draw_tile(screen, x, y, tile_type):
+    rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    if tile_type == 1:  # Wall
+        pygame.draw.rect(screen, WALL_COLOR, rect)
+        pygame.draw.rect(screen, (80, 80, 80), rect, 1)
+    else:  # Floor
+        pygame.draw.rect(screen, FLOOR_COLOR, rect)
+        pygame.draw.rect(screen, (40, 40, 40), rect, 1)
+
+def draw_player(screen, player):
+    rect = pygame.Rect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    pygame.draw.rect(screen, PLAYER_COLOR, rect)
+    pygame.draw.rect(screen, (0, 200, 0), rect, 2)
+    
+    # Draw a simple face
+    pygame.draw.circle(screen, (0, 0, 0), (rect.centerx - 5, rect.centery - 5), 3)
+    pygame.draw.circle(screen, (0, 0, 0), (rect.centerx + 5, rect.centery - 5), 3)
+    pygame.draw.arc(screen, (0, 0, 0), (rect.centerx - 8, rect.centery, 16, 10), 0, 3.14, 2)
+
+def draw_enemy(screen, enemy):
+    rect = pygame.Rect(enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    pygame.draw.rect(screen, enemy.color, rect)
+    pygame.draw.rect(screen, (100, 0, 0), rect, 2)
+    
+    # Draw a simple face
+    pygame.draw.circle(screen, (255, 255, 255), (rect.centerx - 5, rect.centery - 5), 3)
+    pygame.draw.circle(screen, (255, 255, 255), (rect.centerx + 5, rect.centery - 5), 3)
+    pygame.draw.arc(screen, (255, 255, 255), (rect.centerx - 8, rect.centery, 16, 10), 0, 3.14, 2)
+
+def draw_treasure(screen, treasure):
+    rect = pygame.Rect(treasure.x * TILE_SIZE, treasure.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    pygame.draw.rect(screen, treasure.color, rect)
+    pygame.draw.rect(screen, (150, 150, 0), rect, 2)
+    
+    # Draw a simple treasure symbol
+    pygame.draw.circle(screen, (255, 255, 200), rect.center, 8)
+
+def draw_ui(screen, player, dungeon):
+    # Draw health bar
+    pygame.draw.rect(screen, (50, 0, 0), (10, 10, 200, 20))
+    pygame.draw.rect(screen, (0, 255, 0), (10, 10, 200 * (player.health / player.max_health), 20))
+    pygame.draw.rect(screen, (255, 255, 255), (10, 10, 200, 20), 2)
+    
+    # Draw gold
+    font = pygame.font.SysFont(None, 24)
+    text = font.render(f"Gold: {player.gold}", True, TEXT_COLOR)
+    screen.blit(text, (10, 40))
+    
+    # Draw level
+    text = font.render(f"Level: {player.level}", True, TEXT_COLOR)
+    screen.blit(text, (10, 70))
+    
+    # Draw exp
+    pygame.draw.rect(screen, (0, 0, 50), (10, 100, 200, 10))
+    pygame.draw.rect(screen, (0, 200, 255), (10, 100, 200 * (player.exp / player.exp_to_level), 10))
+    pygame.draw.rect(screen, (255, 255, 255), (10, 100, 200, 10), 1)
+    
+    # Draw instructions
+    text = font.render("Use WASD or Arrow Keys to move", True, TEXT_COLOR)
+    screen.blit(text, (300, 10))
+    text = font.render("Press R to restart", True, TEXT_COLOR)
+    screen.blit(text, (300, 40))
+
+def main():
+    # Create player
+    player = Player(1, 1)
+    
+    # Create dungeon
+    dungeon = Dungeon(MAP_WIDTH, MAP_HEIGHT)
+    
+    # Game loop
+    running = True
+    game_over = False
+    
+    while running:
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if not game_over:
+                    if event.key in [pygame.K_w, pygame.K_UP]:
+                        player.move(0, -1, dungeon.map)
+                    elif event.key in [pygame.K_s, pygame.K_DOWN]:
+                        player.move(0, 1, dungeon.map)
+                    elif event.key in [pygame.K_a, pygame.K_LEFT]:
+                        player.move(-1, 0, dungeon.map)
+                    elif event.key in [pygame.K_d, pygame.K_RIGHT]:
+                        player.move(1, 0, dungeon.map)
+                if event.key == pygame.K_r:
+                    # Restart game
+                    player = Player(1, 1)
+                    dungeon = Dungeon(MAP_WIDTH, MAP_HEIGHT)
+                    game_over = False
+        
+        if not game_over:
+            # Check for collisions with enemies
+            for enemy in dungeon.enemies[:]:
+                if enemy.x == player.x and enemy.y == player.y:
+                    # Player attacks enemy
+                    damage = player.attack
+                    actual_damage = enemy.take_damage(damage)
+                    if enemy.health <= 0:
+                        # Enemy defeated
+                        player.gain_exp(enemy.exp_reward)
+                        dungeon.enemies.remove(enemy)
+                    else:
+                        # Enemy attacks player
+                        damage = enemy.attack
+                        actual_damage = player.take_damage(damage)
+                        if player.health <= 0:
+                            game_over = True
+            
+            # Check for collisions with treasures
+            for treasure in dungeon.treasures[:]:
+                if treasure.x == player.x and treasure.y == player.y:
+                    if treasure.type == "gold":
+                        player.gold += treasure.value
+                    elif treasure.type == "health":
+                        player.heal(treasure.value)
+                    elif treasure.type == "sword":
+                        player.attack += treasure.value
+                    dungeon.treasures.remove(treasure)
+        
+        # Draw everything
+        screen.fill(BACKGROUND_COLOR)
+        
+        # Draw dungeon
+        for y in range(dungeon.height):
+            for x in range(dungeon.width):
+                draw_tile(screen, x, y, dungeon.map[y][x])
+        
+        # Draw treasures
+        for treasure in dungeon.treasures:
+            draw_treasure(screen, treasure)
+        
+        # Draw enemies
+        for enemy in dungeon.enemies:
+            draw_enemy(screen, enemy)
+        
+        # Draw player
+        draw_player(screen, player)
+        
+        # Draw UI
+        draw_ui(screen, player, dungeon)
+        
+        # Draw game over message
+        if game_over:
+            font = pygame.font.SysFont(None, 72)
+            text = font.render("GAME OVER", True, (255, 0, 0))
+            text_rect = text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+            screen.blit(text, text_rect)
+            
+            font = pygame.font.SysFont(None, 36)
+            text = font.render("Press R to restart", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 60))
+            screen.blit(text, text_rect)
+        
+        pygame.display.flip()
+        clock.tick(60)
+    
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
