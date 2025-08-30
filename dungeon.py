@@ -218,12 +218,6 @@ def draw_ui(screen, player, dungeon):
     pygame.draw.rect(screen, (0, 0, 50), (10, 100, 200, 10))
     pygame.draw.rect(screen, (0, 200, 255), (10, 100, 200 * (player.exp / player.exp_to_level), 10))
     pygame.draw.rect(screen, (255, 255, 255), (10, 100, 200, 10), 1)
-    
-    # Draw instructions
-    text = font.render("Use WASD or Arrow Keys to move", True, TEXT_COLOR)
-    screen.blit(text, (300, 10))
-    text = font.render("Press R to restart", True, TEXT_COLOR)
-    screen.blit(text, (300, 40))
 
 def main():
     # Create player
@@ -243,14 +237,23 @@ def main():
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if not game_over:
-                    if event.key in [pygame.K_w, pygame.K_UP]:
+                    # Numpad diagonal movement
+                    if event.key == pygame.K_KP7:  # Northwest
+                        player.move(-1, -1, dungeon.map)
+                    elif event.key == pygame.K_KP8:  # North
                         player.move(0, -1, dungeon.map)
-                    elif event.key in [pygame.K_s, pygame.K_DOWN]:
-                        player.move(0, 1, dungeon.map)
-                    elif event.key in [pygame.K_a, pygame.K_LEFT]:
-                        player.move(-1, 0, dungeon.map)
-                    elif event.key in [pygame.K_d, pygame.K_RIGHT]:
+                    elif event.key == pygame.K_KP9:  # Northeast
+                        player.move(1, -1, dungeon.map)
+                    elif event.key == pygame.K_KP6:  # East
                         player.move(1, 0, dungeon.map)
+                    elif event.key == pygame.K_KP3:  # Southeast
+                        player.move(1, 1, dungeon.map)
+                    elif event.key == pygame.K_KP2:  # South
+                        player.move(0, 1, dungeon.map)
+                    elif event.key == pygame.K_KP1:  # Southwest
+                        player.move(-1, 1, dungeon.map)
+                    elif event.key == pygame.K_KP4:  # West
+                        player.move(-1, 0, dungeon.map)
                 if event.key == pygame.K_r:
                     # Restart game
                     player = Player(1, 1)
