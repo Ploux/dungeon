@@ -11,13 +11,35 @@ SCREEN_HEIGHT = 600
 TILE_SIZE = 32
 MAP_WIDTH = 25
 MAP_HEIGHT = 18
-PLAYER_COLOR = (0, 255, 0)
-ENEMY_COLOR = (255, 0, 0)
-TREASURE_COLOR = (255, 255, 0)
-WALL_COLOR = (100, 100, 100)
-FLOOR_COLOR = (50, 50, 50)
-TEXT_COLOR = (255, 255, 255)
-BACKGROUND_COLOR = (0, 0, 0)
+
+# Colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+DARK_GRAY = (100, 100, 100)
+DARKER_GRAY = (50, 50, 50)
+LIGHT_GRAY = (200, 200, 200)
+BLUE = (0, 200, 255)
+PURPLE = (100, 0, 100)
+LIGHT_RED = (200, 50, 50)
+DARK_RED = (150, 0, 0)
+DARK_GREEN = (0, 200, 0)
+DARKER_RED = (50, 0, 0)
+DARK_BLUE = (0, 0, 50)
+LIGHT_YELLOW = (255, 255, 200)
+MEDIUM_GRAY = (80, 80, 80)
+VERY_DARK_GRAY = (40, 40, 40)
+DARKER_YELLOW = (150, 150, 0)
+
+PLAYER_COLOR = GREEN
+ENEMY_COLOR = RED
+TREASURE_COLOR = YELLOW
+WALL_COLOR = DARK_GRAY
+FLOOR_COLOR = DARKER_GRAY
+TEXT_COLOR = WHITE
+BACKGROUND_COLOR = BLACK
 
 # Create the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -81,19 +103,19 @@ class Enemy:
             self.attack = 8
             self.defense = 2
             self.exp_reward = 25
-            self.color = (200, 50, 50)
+            self.color = LIGHT_RED
         elif enemy_type == "orc":
             self.health = 60
             self.attack = 15
             self.defense = 5
             self.exp_reward = 50
-            self.color = (150, 0, 0)
+            self.color = DARK_RED
         elif enemy_type == "dragon":
             self.health = 120
             self.attack = 25
             self.defense = 10
             self.exp_reward = 100
-            self.color = (100, 0, 100)
+            self.color = PURPLE
             
     def take_damage(self, damage):
         actual_damage = max(1, damage - self.defense)
@@ -107,13 +129,13 @@ class Treasure:
         self.type = treasure_type
         if treasure_type == "gold":
             self.value = random.randint(10, 50)
-            self.color = (255, 255, 0)
+            self.color = YELLOW
         elif treasure_type == "health":
             self.value = random.randint(20, 50)
-            self.color = (255, 0, 0)
+            self.color = RED
         elif treasure_type == "sword":
             self.value = random.randint(5, 15)
-            self.color = (200, 200, 200)
+            self.color = LIGHT_GRAY
 
 class Dungeon:
     def __init__(self, width, height):
@@ -166,44 +188,44 @@ def draw_tile(screen, x, y, tile_type):
     rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
     if tile_type == 1:  # Wall
         pygame.draw.rect(screen, WALL_COLOR, rect)
-        pygame.draw.rect(screen, (80, 80, 80), rect, 1)
+        pygame.draw.rect(screen, MEDIUM_GRAY, rect, 1)
     else:  # Floor
         pygame.draw.rect(screen, FLOOR_COLOR, rect)
-        pygame.draw.rect(screen, (40, 40, 40), rect, 1)
+        pygame.draw.rect(screen, VERY_DARK_GRAY, rect, 1)
 
 def draw_player(screen, player):
     rect = pygame.Rect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
     pygame.draw.rect(screen, PLAYER_COLOR, rect)
-    pygame.draw.rect(screen, (0, 200, 0), rect, 2)
+    pygame.draw.rect(screen, DARK_GREEN, rect, 2)
     
     # Draw a simple face
-    pygame.draw.circle(screen, (0, 0, 0), (rect.centerx - 5, rect.centery - 5), 3)
-    pygame.draw.circle(screen, (0, 0, 0), (rect.centerx + 5, rect.centery - 5), 3)
-    pygame.draw.arc(screen, (0, 0, 0), (rect.centerx - 8, rect.centery, 16, 10), 0, 3.14, 2)
+    pygame.draw.circle(screen, BLACK, (rect.centerx - 5, rect.centery - 5), 3)
+    pygame.draw.circle(screen, BLACK, (rect.centerx + 5, rect.centery - 5), 3)
+    pygame.draw.arc(screen, BLACK, (rect.centerx - 8, rect.centery, 16, 10), 0, 3.14, 2)
 
 def draw_enemy(screen, enemy):
     rect = pygame.Rect(enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
     pygame.draw.rect(screen, enemy.color, rect)
-    pygame.draw.rect(screen, (100, 0, 0), rect, 2)
+    pygame.draw.rect(screen, DARKER_RED, rect, 2)
     
     # Draw a simple face
-    pygame.draw.circle(screen, (255, 255, 255), (rect.centerx - 5, rect.centery - 5), 3)
-    pygame.draw.circle(screen, (255, 255, 255), (rect.centerx + 5, rect.centery - 5), 3)
-    pygame.draw.arc(screen, (255, 255, 255), (rect.centerx - 8, rect.centery, 16, 10), 0, 3.14, 2)
+    pygame.draw.circle(screen, WHITE, (rect.centerx - 5, rect.centery - 5), 3)
+    pygame.draw.circle(screen, WHITE, (rect.centerx + 5, rect.centery - 5), 3)
+    pygame.draw.arc(screen, WHITE, (rect.centerx - 8, rect.centery, 16, 10), 0, 3.14, 2)
 
 def draw_treasure(screen, treasure):
     rect = pygame.Rect(treasure.x * TILE_SIZE, treasure.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
     pygame.draw.rect(screen, treasure.color, rect)
-    pygame.draw.rect(screen, (150, 150, 0), rect, 2)
+    pygame.draw.rect(screen, DARKER_YELLOW, rect, 2)
     
     # Draw a simple treasure symbol
-    pygame.draw.circle(screen, (255, 255, 200), rect.center, 8)
+    pygame.draw.circle(screen, LIGHT_YELLOW, rect.center, 8)
 
 def draw_ui(screen, player, dungeon):
     # Draw health bar
-    pygame.draw.rect(screen, (50, 0, 0), (10, 10, 200, 20))
-    pygame.draw.rect(screen, (0, 255, 0), (10, 10, 200 * (player.health / player.max_health), 20))
-    pygame.draw.rect(screen, (255, 255, 255), (10, 10, 200, 20), 2)
+    pygame.draw.rect(screen, DARKER_RED, (10, 10, 200, 20))
+    pygame.draw.rect(screen, GREEN, (10, 10, 200 * (player.health / player.max_health), 20))
+    pygame.draw.rect(screen, WHITE, (10, 10, 200, 20), 2)
     
     # Draw gold
     font = pygame.font.SysFont(None, 24)
@@ -215,9 +237,9 @@ def draw_ui(screen, player, dungeon):
     screen.blit(text, (10, 70))
     
     # Draw exp
-    pygame.draw.rect(screen, (0, 0, 50), (10, 100, 200, 10))
-    pygame.draw.rect(screen, (0, 200, 255), (10, 100, 200 * (player.exp / player.exp_to_level), 10))
-    pygame.draw.rect(screen, (255, 255, 255), (10, 100, 200, 10), 1)
+    pygame.draw.rect(screen, DARK_BLUE, (10, 100, 200, 10))
+    pygame.draw.rect(screen, BLUE, (10, 100, 200 * (player.exp / player.exp_to_level), 10))
+    pygame.draw.rect(screen, WHITE, (10, 100, 200, 10), 1)
 
 def main():
     # Create player
@@ -314,12 +336,12 @@ def main():
         # Draw game over message
         if game_over:
             font = pygame.font.SysFont(None, 72)
-            text = font.render("GAME OVER", True, (255, 0, 0))
+            text = font.render("GAME OVER", True, RED)
             text_rect = text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
             screen.blit(text, text_rect)
             
             font = pygame.font.SysFont(None, 36)
-            text = font.render("Press R to restart", True, (255, 255, 255))
+            text = font.render("Press R to restart", True, WHITE)
             text_rect = text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 60))
             screen.blit(text, text_rect)
         
