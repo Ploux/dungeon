@@ -1,7 +1,7 @@
 # dungeon
 A rogue-like dungeon crawler in PyGame.
 
-<img width="796" height="633" alt="image" src="https://github.com/user-attachments/assets/35642558-ecde-4184-ba01-9b7347103ca3" />
+<img width="796" height="633" alt="image" src="https://github.com/user-attachments/assets/c0a25924-f5ac-449d-b382-0c18a7dfb1ea" />
 
 ## Recent Improvements
 * Added message window. (Use PgUp and PgDn to scroll.)
