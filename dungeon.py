@@ -47,7 +47,7 @@ BACKGROUND_COLOR = BLACK
 
 # Create the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Dungeon Crawler")
+pygame.display.set_caption("Dungeon")
 clock = pygame.time.Clock()
 
 class MessageWindow:
