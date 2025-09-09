@@ -10,11 +10,10 @@ A rogue-like dungeon crawler in PyGame.
 * Removed directions that were covering part of the screen.
 
 ## TODO
-- [ ] make fights a turn-by-turn affair
-- [ ] make items actually work
+- [x] make fights a turn-by-turn affair
 - [ ] make "swords" make sense - currently the more swords you have, the better your attack :D
 - [ ] inventory
-- [ ] spite graphics
+- [ ] sprite graphics
 - [ ] more levels
 - [ ] more types of monsters
 - [ ] more types of equipment
