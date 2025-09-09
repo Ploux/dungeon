@@ -316,23 +316,59 @@ def main():
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if not game_over:
-                    # Numpad diagonal movement
+                    # Handle movement and combat
+                    dx, dy = 0, 0
                     if event.key == pygame.K_KP7:  # Northwest
-                        player.move(-1, -1, dungeon.map)
+                        dx, dy = -1, -1
                     elif event.key == pygame.K_KP8 or event.key == pygame.K_UP:  # North
-                        player.move(0, -1, dungeon.map)
+                        dx, dy = 0, -1
                     elif event.key == pygame.K_KP9:  # Northeast
-                        player.move(1, -1, dungeon.map)
+                        dx, dy = 1, -1
                     elif event.key == pygame.K_KP6 or event.key == pygame.K_RIGHT:  # East
-                        player.move(1, 0, dungeon.map)
+                        dx, dy = 1, 0
                     elif event.key == pygame.K_KP3:  # Southeast
-                        player.move(1, 1, dungeon.map)
+                        dx, dy = 1, 1
                     elif event.key == pygame.K_KP2 or event.key == pygame.K_DOWN:  # South
-                        player.move(0, 1, dungeon.map)
+                        dx, dy = 0, 1
                     elif event.key == pygame.K_KP1:  # Southwest
-                        player.move(-1, 1, dungeon.map)
+                        dx, dy = -1, 1
                     elif event.key == pygame.K_KP4 or event.key == pygame.K_LEFT:  # West
-                        player.move(-1, 0, dungeon.map)
+                        dx, dy = -1, 0
+                    
+                    # Check if movement would trigger combat
+                    if dx != 0 or dy != 0:
+                        new_x = player.x + dx
+                        new_y = player.y + dy
+                        
+                        # Check if there's an enemy at the target position
+                        enemy_at_target = None
+                        for enemy in dungeon.enemies:
+                            if enemy.x == new_x and enemy.y == new_y:
+                                enemy_at_target = enemy
+                                break
+                        
+                        if enemy_at_target:
+                            # Combat: Player attacks enemy
+                            damage = player.attack
+                            actual_damage = enemy_at_target.take_damage(damage)
+                            message_window.add_message(f"You hit the {enemy_at_target.type} for {actual_damage}.")
+                            
+                            if enemy_at_target.health <= 0:
+                                # Enemy defeated - player moves into square
+                                message_window.add_message(f"You have slain the {enemy_at_target.type}!")
+                                player.gain_exp(enemy_at_target.exp_reward)
+                                dungeon.enemies.remove(enemy_at_target)
+                                player.move(dx, dy, dungeon.map)
+                            else:
+                                # Enemy attacks back
+                                damage = enemy_at_target.attack
+                                actual_damage = player.take_damage(damage)
+                                message_window.add_message(f"The {enemy_at_target.type} hits you for {actual_damage}.")
+                                if player.health <= 0:
+                                    game_over = True
+                        else:
+                            # Normal movement (no enemy at target)
+                            player.move(dx, dy, dungeon.map)
 
                 # Message window scrolling
                 if event.key == pygame.K_PAGEUP:
@@ -351,27 +387,6 @@ def main():
                     game_over = False
 
         if not game_over:
-            # Check for collisions with enemies
-            for enemy in dungeon.enemies[:]:
-                if enemy.x == player.x and enemy.y == player.y:
-                    # Player attacks enemy
-                    damage = player.attack
-                    actual_damage = enemy.take_damage(damage)
-                    message_window.add_message(f"You hit the {enemy.type} for {actual_damage}.")
-
-                    if enemy.health <= 0:
-                        # Enemy defeated
-                        message_window.add_message(f"You have slain the {enemy.type}!")
-                        player.gain_exp(enemy.exp_reward)
-                        dungeon.enemies.remove(enemy)
-                    else:
-                        # Enemy attacks player
-                        damage = enemy.attack
-                        actual_damage = player.take_damage(damage)
-                        message_window.add_message(f"The {enemy.type} hits you for {actual_damage}.")
-                        if player.health <= 0:
-                            game_over = True
-
             # Check for collisions with treasures
             for treasure in dungeon.treasures[:]:
                 if treasure.x == player.x and treasure.y == player.y:
